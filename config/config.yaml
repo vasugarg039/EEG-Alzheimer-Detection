@@ -1,0 +1,111 @@
+# EEG Alzheimer's Detection Configuration
+# Research and educational use only — not a clinical diagnostic tool.
+
+paths:
+  data_root: "D:/EEG Dataset/ds004504"
+  metadata: "data/metadata/eeg_dataset_summary.csv"
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  features_dir: "data/features"
+  models_dir: "models"
+  results_dir: "results"
+  reports_dir: "reports"
+  logs_dir: "logs"
+
+eeg:
+  expected_channels: 19
+  expected_sampling_rate: 500.0
+  channel_names:
+    - Fp1
+    - Fp2
+    - F3
+    - F4
+    - C3
+    - C4
+    - P3
+    - P4
+    - O1
+    - O2
+    - F7
+    - F8
+    - T3
+    - T4
+    - T5
+    - T6
+    - Fz
+    - Cz
+    - Pz
+  line_frequency: 50.0
+
+preprocessing:
+  highpass: 1.0
+  lowpass: 45.0
+  notch: 50.0
+  resample_sfreq: null
+  ica_enabled: false
+  ica_n_components: 15
+  reject_threshold_uv: 200.0
+
+segmentation:
+  epoch_length_sec: 2.0
+  overlap: 0.5
+  min_epoch_quality: 0.5
+
+features:
+  bands:
+    delta: [0.5, 4.0]
+    theta: [4.0, 8.0]
+    alpha: [8.0, 13.0]
+    beta: [13.0, 30.0]
+    gamma: [30.0, 45.0]
+  n_fft: 512
+  n_per_seg: 256
+  compute_hjorth: true
+  compute_entropy: true
+  compute_connectivity: false
+
+models:
+  random_seed: 42
+  test_size: 0.2
+  cv_folds: 5
+  models:
+    - name: "logistic_regression"
+      class: "sklearn.linear_model.LogisticRegression"
+      params:
+        max_iter: 1000
+        random_state: 42
+        class_weight: "balanced"
+    - name: "svm"
+      class: "sklearn.svm.SVC"
+      params:
+        kernel: "rbf"
+        random_state: 42
+        class_weight: "balanced"
+        probability: true
+    - name: "random_forest"
+      class: "sklearn.ensemble.RandomForestClassifier"
+      params:
+        n_estimators: 200
+        random_state: 42
+        class_weight: "balanced"
+
+training:
+  primary_metric: "f1_macro"
+  secondary_metric: "balanced_accuracy"
+  early_stopping: false
+
+explainability:
+  method: "permutation"
+  n_repeats: 10
+  top_n_features: 20
+
+visualization:
+  dpi: 150
+  figsize: [12, 6]
+  max_channels_plot: 19
+  max_duration_plot_sec: 30
+
+report:
+  include_raw_data: false
+  include_subject_ids: false
+  timestamp_format: "%Y%m%d_%H%M%S"
