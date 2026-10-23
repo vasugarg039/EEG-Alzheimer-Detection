@@ -7,7 +7,7 @@ Usage:
     python main.py train [--config CONFIG]
     python main.py evaluate [--config CONFIG] [--model MODEL_DIR]
     python main.py predict [--config CONFIG] [--model MODEL_DIR] --input FILE
-    python main.py app
+    python main.py web [--host HOST] [--port PORT]
 """
 
 from __future__ import annotations
@@ -295,16 +295,16 @@ def cmd_predict(args: argparse.Namespace) -> int:
         return 1
 
 
-def cmd_app(args: argparse.Namespace) -> int:
-    """Launch the Streamlit app."""
-    import subprocess
+def cmd_web(args: argparse.Namespace) -> int:
+    """Launch the FastAPI web application."""
+    sys.path.insert(0, str(Path(__file__).parent / "webapp"))
+    try:
+        from webapp.server import run
+    except ImportError:
+        # Fall back to a direct import when run from the webapp directory
+        from server import run  # type: ignore
 
-    app_path = Path(__file__).parent / "app.py"
-    if not app_path.exists():
-        print(f"ERROR: App file not found: {app_path}", file=sys.stderr)
-        return 1
-
-    subprocess.run([sys.executable, "-m", "streamlit", "run", str(app_path)])
+    run(host=args.host, port=args.port)
     return 0
 
 
@@ -342,8 +342,10 @@ def main() -> int:
     pred_parser.add_argument("--model", "-m", required=True, help="Path to saved model directory")
     pred_parser.add_argument("--input", "-i", required=True, help="Path to EEG file")
 
-    # app
-    subparsers.add_parser("app", help="Launch the Streamlit app")
+    # web
+    web_parser = subparsers.add_parser("web", help="Launch the web application")
+    web_parser.add_argument("--host", default="127.0.0.1", help="Host to bind (default 127.0.0.1)")
+    web_parser.add_argument("--port", type=int, default=8000, help="Port to bind (default 8000)")
 
     args = parser.parse_args()
 
@@ -358,7 +360,7 @@ def main() -> int:
         "train": cmd_train,
         "evaluate": cmd_evaluate,
         "predict": cmd_predict,
-        "app": cmd_app,
+        "web": cmd_web,
     }
 
     return commands[args.command](args)

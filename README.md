@@ -16,10 +16,18 @@ This software is intended for **research and educational purposes only**. It is 
 ```
 .
 ├── main.py                  # CLI entry point
-├── app.py                   # Streamlit application
 ├── requirements.txt         # Python dependencies
 ├── config/
 │   └── config.yaml          # Configuration file
+├── webapp/                  # Web application
+│   ├── server.py            # FastAPI backend (JSON API)
+│   ├── uploads/             # User uploads (gitignored)
+│   └── static/              # HTML/CSS/JS frontend
+│       ├── index.html
+│       ├── styles.css
+│       ├── app.js
+│       └── vendor/plotly.min.js
+├── notebooks/               # Step-by-step walkthroughs (01–08)
 ├── src/
 │   ├── __init__.py
 │   ├── config.py            # Configuration loading
@@ -159,29 +167,41 @@ python main.py predict --model models/logistic_regression_20240101_120000 --inpu
 ```
 Classifies a new EEG recording.
 
-#### Launch App
+#### Launch Web App
 ```powershell
-python main.py app
+python main.py web
 ```
-Starts the Streamlit web interface.
+Starts the web application at `http://127.0.0.1:8000`.
 
-### Streamlit Application
+### Web Application
+
+The frontend is plain **HTML/CSS/JavaScript** (no build step) served by a
+**FastAPI** backend that wraps the Python pipeline. Plotly is vendored locally,
+so the app works fully offline.
 
 ```powershell
-python main.py app
+python main.py web                 # http://127.0.0.1:8000
+python main.py web --port 9000     # custom port
+python main.py web --host 0.0.0.0  # expose on the network
 ```
 
-The app provides pages for:
-- Dashboard
-- Dataset Overview
-- EEG Viewer
-- Preprocessing
-- Feature Analysis
-- Model Training
-- Evaluation
-- Explainability
-- Prediction
-- Report Export
+Pages:
+
+| Page | Description |
+|---|---|
+| **Dashboard** | Dataset metrics, class distribution, system status |
+| **Dataset** | Metadata table and summary statistics |
+| **EEG Viewer** | Interactive multi-channel signal plot with channel/time selection |
+| **Upload** | Drag & drop EEG recordings (`.set .edf .fif .vhdr .csv .npy`) and metadata CSV |
+| **Preprocessing** | Run filtering and segmentation, view results |
+| **Features** | Feature table and per-subject band-power extraction |
+| **Models** | List trained models with their metrics |
+| **Evaluation** | Metrics, model comparison, per-class F1 |
+| **Explainability** | Permutation feature importance chart |
+| **Prediction** | Classify a subject or an uploaded file with class probabilities |
+
+The backend exposes a documented JSON API under `/api` (interactive docs at
+`http://127.0.0.1:8000/docs`).
 
 ## Testing
 

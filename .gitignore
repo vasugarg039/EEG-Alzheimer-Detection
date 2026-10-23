@@ -62,5 +62,5 @@ htmlcov/
 .coverage
 .pytest_cache/
 
-# Streamlit
-.streamlit/
+# Web app uploads (user-provided data)
+webapp/uploads/

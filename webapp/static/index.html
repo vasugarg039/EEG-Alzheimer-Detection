@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EEG Alzheimer's Detection</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <script src="/static/vendor/plotly.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-icon">🧠</span>
+        <div>
+          <div class="brand-title">EEG Alzheimer's</div>
+          <div class="brand-sub">Detection Suite</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-page="dashboard"><span>📊</span> Dashboard</button>
+        <button class="nav-item" data-page="dataset"><span>🗂️</span> Dataset</button>
+        <button class="nav-item" data-page="viewer"><span>📈</span> EEG Viewer</button>
+        <button class="nav-item" data-page="upload"><span>⬆️</span> Upload</button>
+        <button class="nav-item" data-page="preprocess"><span>🧹</span> Preprocessing</button>
+        <button class="nav-item" data-page="features"><span>🧬</span> Features</button>
+        <button class="nav-item" data-page="models"><span>🤖</span> Models</button>
+        <button class="nav-item" data-page="evaluation"><span>📏</span> Evaluation</button>
+        <button class="nav-item" data-page="explain"><span>🔍</span> Explainability</button>
+        <button class="nav-item" data-page="predict"><span>🎯</span> Prediction</button>
+      </nav>
+
+      <div class="disclaimer">
+        <strong>Disclaimer</strong>
+        <p>Research &amp; educational tool only. Not a clinical diagnostic device.</p>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content">
+      <header class="topbar">
+        <h1 id="page-title">Dashboard</h1>
+        <div class="status-pill" id="status-pill">
+          <span class="dot" id="status-dot"></span>
+          <span id="status-text">Connecting…</span>
+        </div>
+      </header>
+
+      <div class="pages">
+        <!-- Dashboard -->
+        <section class="page active" id="page-dashboard">
+          <div class="cards" id="dash-cards">
+            <div class="card"><div class="card-label">Total Subjects</div><div class="card-value" id="dash-subjects">—</div></div>
+            <div class="card"><div class="card-label">Recordings Available</div><div class="card-value" id="dash-recordings">—</div></div>
+            <div class="card"><div class="card-label">EEG Channels</div><div class="card-value">19</div></div>
+            <div class="card"><div class="card-label">Sampling Rate</div><div class="card-value">500 Hz</div></div>
+            <div class="card"><div class="card-label">Saved Models</div><div class="card-value" id="dash-models">—</div></div>
+          </div>
+
+          <div class="grid-2">
+            <div class="panel">
+              <h2>Class Distribution</h2>
+              <div id="dash-chart" class="chart"></div>
+            </div>
+            <div class="panel">
+              <h2>System Status</h2>
+              <ul class="status-list" id="status-list"></ul>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Quick Start</h2>
+            <ol class="quick-start">
+              <li><b>Dataset</b> — explore metadata and class balance.</li>
+              <li><b>EEG Viewer</b> — inspect raw signals per subject.</li>
+              <li><b>Upload</b> — bring your own EEG recording.</li>
+              <li><b>Preprocessing</b> — filter and validate a recording.</li>
+              <li><b>Features</b> — review extracted features.</li>
+              <li><b>Models</b> / <b>Evaluation</b> — inspect trained models and metrics.</li>
+              <li><b>Explainability</b> — see which features drive predictions.</li>
+              <li><b>Prediction</b> — classify a subject or uploaded file.</li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- Dataset -->
+        <section class="page" id="page-dataset">
+          <div class="cards" id="dataset-cards"></div>
+          <div class="panel">
+            <h2>Metadata</h2>
+            <div class="table-wrap"><table id="metadata-table"></table></div>
+          </div>
+        </section>
+
+        <!-- EEG Viewer -->
+        <section class="page" id="page-viewer">
+          <div class="panel">
+            <h2>EEG Viewer</h2>
+            <div class="controls">
+              <label>Subject
+                <select id="viewer-subject"></select>
+              </label>
+              <label>Window (seconds)
+                <input type="number" id="viewer-duration" value="10" min="1" max="120" step="1" />
+              </label>
+              <label>Start (seconds)
+                <input type="number" id="viewer-start" value="0" min="0" step="1" />
+              </label>
+              <button class="btn primary" id="viewer-load">Load Signal</button>
+            </div>
+            <label class="full">Channels (multi-select)</label>
+            <div class="channel-grid" id="viewer-channels"></div>
+            <div id="viewer-info" class="info-line"></div>
+            <div id="viewer-chart" class="chart tall"></div>
+          </div>
+        </section>
+
+        <!-- Upload -->
+        <section class="page" id="page-upload">
+          <div class="grid-2">
+            <div class="panel">
+              <h2>Upload EEG Recording</h2>
+              <p class="muted">Supported: <code>.set .edf .fif .vhdr .csv .npy</code></p>
+              <div class="dropzone" id="eeg-dropzone">
+                <input type="file" id="eeg-file" accept=".set,.edf,.fif,.vhdr,.csv,.npy" hidden />
+                <p>Drag &amp; drop an EEG file here, or <span class="link">browse</span></p>
+              </div>
+              <div id="eeg-upload-result" class="result"></div>
+            </div>
+
+            <div class="panel">
+              <h2>Upload Metadata CSV</h2>
+              <p class="muted">Must contain: <code>subject_id, group, age, gender, mmse, ...</code></p>
+              <div class="dropzone" id="meta-dropzone">
+                <input type="file" id="meta-file" accept=".csv" hidden />
+                <p>Drag &amp; drop a metadata CSV, or <span class="link">browse</span></p>
+              </div>
+              <div id="meta-upload-result" class="result"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Uploaded Files</h2>
+            <div class="table-wrap"><table id="uploaded-table"></table></div>
+          </div>
+        </section>
+
+        <!-- Preprocessing -->
+        <section class="page" id="page-preprocess">
+          <div class="panel">
+            <h2>Preprocessing &amp; Segmentation</h2>
+            <p class="muted">Runs band-pass + notch filtering, then splits into epochs.</p>
+            <div class="controls">
+              <label>Subject
+                <select id="prep-subject"></select>
+              </label>
+              <button class="btn primary" id="prep-run">Run Preprocessing</button>
+              <button class="btn" id="seg-run">Run Segmentation</button>
+            </div>
+            <div id="prep-result" class="result"></div>
+          </div>
+        </section>
+
+        <!-- Features -->
+        <section class="page" id="page-features">
+          <div class="cards" id="feature-cards"></div>
+          <div class="panel">
+            <h2>Feature Table (preview)</h2>
+            <div class="table-wrap"><table id="feature-table"></table></div>
+          </div>
+          <div class="panel">
+            <h2>Extract for a Subject</h2>
+            <div class="controls">
+              <label>Subject
+                <select id="feat-subject"></select>
+              </label>
+              <button class="btn primary" id="feat-run">Extract Features</button>
+            </div>
+            <div id="feat-result" class="result"></div>
+            <div id="feat-chart" class="chart"></div>
+          </div>
+        </section>
+
+        <!-- Models -->
+        <section class="page" id="page-models">
+          <div class="panel">
+            <h2>Saved Models</h2>
+            <div class="table-wrap"><table id="models-table"></table></div>
+          </div>
+        </section>
+
+        <!-- Evaluation -->
+        <section class="page" id="page-evaluation">
+          <div class="panel">
+            <h2>Evaluation Metrics</h2>
+            <div id="eval-content" class="result"></div>
+          </div>
+          <div class="grid-2">
+            <div class="panel"><h2>Confusion Matrix</h2><div id="eval-cm" class="chart"></div></div>
+            <div class="panel"><h2>Per-Class F1</h2><div id="eval-f1" class="chart"></div></div>
+          </div>
+        </section>
+
+        <!-- Explainability -->
+        <section class="page" id="page-explain">
+          <div class="panel">
+            <h2>Feature Importance</h2>
+            <div class="controls">
+              <label>Model
+                <select id="explain-model"></select>
+              </label>
+              <button class="btn primary" id="explain-run">Compute Importance</button>
+            </div>
+            <div id="explain-info" class="info-line"></div>
+            <div id="explain-chart" class="chart tall"></div>
+          </div>
+        </section>
+
+        <!-- Prediction -->
+        <section class="page" id="page-predict">
+          <div class="panel">
+            <h2>Classify a Recording</h2>
+            <div class="controls">
+              <label>Model
+                <select id="predict-model"></select>
+              </label>
+              <label>Source
+                <select id="predict-source">
+                  <option value="subject">Existing subject</option>
+                  <option value="upload">Uploaded file</option>
+                </select>
+              </label>
+              <label id="predict-subject-wrap">Subject
+                <select id="predict-subject"></select>
+              </label>
+              <label id="predict-file-wrap" style="display:none">Uploaded file
+                <select id="predict-file"></select>
+              </label>
+              <button class="btn primary" id="predict-run">Predict</button>
+            </div>
+            <div id="predict-result" class="result"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

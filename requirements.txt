@@ -11,8 +11,10 @@ mne>=1.6,<2
 matplotlib>=3.8,<4
 seaborn>=0.13,<1
 
-# App
-streamlit>=1.30,<2
+# Web application (FastAPI backend + static HTML/CSS/JS frontend)
+fastapi>=0.110,<1
+uvicorn>=0.27,<1
+python-multipart>=0.0.9
 
 # Utilities
 pyyaml>=6.0,<7

@@ -10,7 +10,7 @@ Metadata for 88 subjects lives in `data/metadata/eeg_dataset_summary.csv` (36 AD
 
 ## Code Status
 
-All `src/` modules are fully implemented. `main.py` provides CLI commands: `validate`, `preprocess`, `features`, `train`, `evaluate`, `predict`, `app`. Tests cover 92 cases across all modules.
+All `src/` modules are fully implemented. `main.py` provides CLI commands: `validate`, `preprocess`, `features`, `train`, `evaluate`, `predict`, `web`. Tests cover 92 cases across all modules.
 
 ## Key Commands
 
@@ -18,9 +18,16 @@ All `src/` modules are fully implemented. `main.py` provides CLI commands: `vali
 python main.py validate      # Check dataset metadata and recordings
 python main.py features      # Extract features from EEG
 python main.py train         # Train and compare models
-python main.py app           # Launch Streamlit interface
+python main.py web           # Launch FastAPI web app at http://127.0.0.1:8000
 pytest tests/ -v             # Run test suite
 ```
+
+## Web Application
+
+- `webapp/server.py` — FastAPI backend exposing a JSON API under `/api` (wraps `src/`).
+- `webapp/static/` — vanilla HTML/CSS/JS frontend (no build step); Plotly is vendored in `static/vendor/`.
+- Config paths are resolved to absolute paths against the project root at startup, so the server works from any launch directory.
+- The API is the source of truth for the frontend; when changing a data shape, update both `webapp/server.py` and `webapp/static/app.js`.
 
 ## Architecture
 
